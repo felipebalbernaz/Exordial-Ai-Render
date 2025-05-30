@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Gerador de Petições - IA Jurídica{% endblock %}
+
+{% block content %}
+<section class="tool-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+        <h2 class="tool-title" style="text-align: left; margin-bottom: 0;">Gerador Inteligente de Petições</h2>
+        <div style="text-align: right;">
+            <span style="font-size: 1em; color: var(--primary-color); font-weight: bold; display: block;">
+                Tokens: <span id="user-tokens-display">{{ user_tokens }}</span> (Plano: {{ current_user_plan | capitalize }})
+            </span>
+            <span style="font-size: 0.9em; color: var(--text-color-light); display: block;">
+                Agente Atual: <strong style="text-transform: capitalize;">{{ current_agent | default('Não Selecionado') | replace('_', ' ') }}</strong>
+            </span>
+        </div>
+    </div>
+    <p class="tool-subtitle" style="text-align: left; clear: both;"> {# Adicionado clear: both para garantir que fique abaixo dos itens flutuantes se houver #}
+        Preencha os dados abaixo para que a IA possa criar um rascunho completo da sua petição. 
+        <strong>Quanto mais informações, mais preciso será o resultado.</strong>
+    </p>
+    <form id="petition-form" class="petition-form">
+
+        <div class="form-section">
+            <h3><i class="fas fa-file-invoice"></i> Dados Essenciais da Petição</h3>
+            <div class="form-group">
+                <label for="tipo-peticao">Tipo de Peça Jurídica:</label>
+                <input type="text" id="tipo-peticao" name="tipo-peticao" placeholder="Ex: Petição Inicial, Contestação, Recurso de Apelação" required>
+                <small>Ajuda a IA a modelar a estrutura e o tom do documento.</small>
+            </div>
+            <div class="form-group">
+                <label for="assunto-principal">Assunto Principal (Ex: Direito Civil, Família, Consumidor):</label>
+                <input type="text" id="assunto-principal" name="assunto-principal" placeholder="Ex: Ação de Cobrança, Divórcio, Indenização por Danos Morais" required>
+                <small>Contexto fundamental para a análise jurídica da IA.</small>
+            </div>
+            <div class="form-group">
+                <label for="partes">Partes Envolvidas (Autor, Réu, etc.):</label>
+                <textarea id="partes" name="partes" rows="3" placeholder="Ex: João da Silva (Autor) vs. Empresa XYZ Ltda. (Réu)" required></textarea>
+                <small>Nomes completos, qualificações e endereços se possível.</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-keyboard"></i> Fatos e Narrativa (Texto Livre)</h3>
+            <div class="form-group">
+                <label for="fatos">Descreva os Fatos Detalhadamente:</label>
+                <textarea id="fatos" name="fatos" rows="10" placeholder="Narração cronológica e detalhada dos fatos relevantes do caso. Inclua datas, locais, pessoas e eventos chave." required></textarea>
+                <small>Este é o campo mais importante para a IA. Seja o mais claro e completo possível.</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-paperclip"></i> Anexar Documentos e Mídias (Opcional)</h3>
+            <p style="font-size: 0.9em; color: var(--text-color-light); margin-bottom: 15px;">O processamento de arquivos ainda está em desenvolvimento. Por enquanto, a IA será informada sobre os nomes dos arquivos enviados.</p>
+            <div class="form-group">
+                <label for="doc-input">Upload de Documentos (PDF, DOCX, TXT):</label>
+                <input type="file" id="doc-input" name="doc-input" accept=".pdf,.doc,.docx,.txt" multiple>
+                <small>Anexe contratos, provas, certidões.</small>
+            </div>
+            <div class="form-group">
+                <label for="audio-input">Upload de Áudio (MP3, WAV, M4A):</label>
+                <input type="file" id="audio-input" name="audio-input" accept="audio/*">
+                <small>Gravações de conversas, audiências.</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-lightbulb"></i> Diretrizes Adicionais e Pedidos Específicos</h3>
+            <div class="form-group">
+                <label for="outras-info">Informações/Diretrizes para a IA:</label>
+                <textarea id="outras-info" name="outras-info" rows="5" placeholder="Mencione artigos de lei específicos, precedentes importantes, pedidos de urgência, ou qualquer outra instrução para a IA."></textarea>
+                <small>Refine a geração com suas próprias especificações.</small>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-generate"><i class="fas fa-robot"></i> Gerar Rascunho da Petição</button>
+            <button type="reset" class="btn btn-clear"><i class="fas fa-eraser"></i> Limpar Campos</button>
+        </div>
+    </form>
+
+    <div id="loading-spinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processando e gerando sua petição... Isso pode levar alguns instantes. Agradecemos sua paciência.</p>
+    </div>
+
+    <div id="result-area" class="result-area" style="display: none;">
+        <h3><i class="fas fa-scroll"></i> Rascunho da Petição Gerada:</h3>
+        <div class="generated-text-wrapper">
+            <pre id="generated-petition-text"></pre>
+        </div>
+        <div class="result-actions">
+            <button type="button" class="btn btn-secondary" onclick="copyToClipboard()"><i class="fas fa-copy"></i> Copiar Texto</button>
+            </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('petition-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const resultArea = document.getElementById('result-area');
+        const generatedPetitionText = document.getElementById('generated-petition-text');
+        const userTokensDisplay = document.getElementById('user-tokens-display');
+
+        resultArea.style.display = 'none';
+        loadingSpinner.style.display = 'block';
+
+        const formData = new FormData(event.target);
+
+        // Adicionar arquivos explicitamente se existirem
+        const docInput = document.getElementById('doc-input');
+        if (docInput.files.length > 0) {
+            for (let i = 0; i < docInput.files.length; i++) {
+                formData.append('doc-input', docInput.files[i]);
+            }
+        }
+
+        const audioInput = document.getElementById('audio-input');
+        if (audioInput.files.length > 0) {
+            formData.append('audio-input', audioInput.files[0]);
+        }
+
+
+        try {
+            const response = await fetch("{{ url_for('api_generate_petition') }}", {
+                method: 'POST',
+                body: formData // Envia como FormData para suportar arquivos
+                // Se não houvesse arquivos:
+                // headers: { 'Content-Type': 'application/json' },
+                // body: JSON.stringify(Object.fromEntries(formData.entries()))
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `Erro ${response.status} ao gerar petição.`);
+            }
+
+            if (data.generated_petition) {
+                generatedPetitionText.textContent = data.generated_petition;
+                // Atualizar tokens na interface (o backend já atualizou na sessão e "BD")
+                const currentTokens = parseInt(userTokensDisplay.textContent);
+                if (currentTokens > 0) { // Apenas atualiza se a geração foi um sucesso (implícito)
+                     userTokensDisplay.textContent = currentTokens - 1;
+                }
+            } else if (data.error) {
+                generatedPetitionText.textContent = "Erro: " + data.error + (data.details ? "\nDetalhes: " + data.details : "");
+                alert("Erro ao gerar petição: " + data.error);
+            }
+
+        } catch (error) {
+            console.error("Erro ao submeter formulário:", error);
+            generatedPetitionText.textContent = "Ocorreu um erro ao conectar com o servidor para gerar a petição. Detalhes: " + error.message;
+            alert("Erro de comunicação ao gerar petição. Verifique o console para mais detalhes.");
+        } finally {
+            loadingSpinner.style.display = 'none';
+            resultArea.style.display = 'block';
+        }
+    });
+
+    document.querySelector('.btn-clear').addEventListener('click', () => {
+        document.getElementById('petition-form').reset();
+        document.getElementById('result-area').style.display = 'none';
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('generated-petition-text').textContent = '';
+    });
+
+    function copyToClipboard() {
+        const text = document.getElementById('generated-petition-text').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Texto da petição copiado para a área de transferência!');
+        }).catch(err => {
+            console.error('Erro ao copiar texto: ', err);
+            alert('Não foi possível copiar o texto. Por favor, copie manualmente.');
+        });
+    }
+
+    // A função downloadText original pode ser mantida se quiser download direto do cliente,
+    // mas para DOCX/PDF gerado no backend, você precisaria de um endpoint Flask.
+    // function downloadText(filename, elementId) { ... }
+</script>
+{% endblock %}

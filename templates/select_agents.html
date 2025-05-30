@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Selecionar Agente de IA - IA Jurídica{% endblock %}
+
+{% block content %}
+<section class="tool-card" style="max-width: 700px; margin: 40px auto;">
+    <h2 class="tool-title" style="font-size: 2em;">Selecionar Agente de IA</h2>
+    <p class="tool-subtitle">Escolha qual motor de Inteligência Artificial será usado para gerar suas petições.</p>
+
+    <form method="POST" action="{{ url_for('selecionar_agentes') }}" class="petition-form" style="gap: 20px;">
+        <div class="form-group">
+            <label for="agent-select">Agente de IA:</label>
+            <select id="agent-select" name="agent" class="form-control" style="padding: 14px; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1em;">
+                <option value="simulated" {% if current_agent == 'simulated' %}selected{% endif %}>Simulador Interno (Padrão)</option>
+                <option value="groq_general" {% if current_agent == 'groq_general' %}selected{% endif %}>Groq API - Agente Geral (LLaMA, Mixtral)</option>
+                <option value="chatvolt_single" {% if current_agent == 'chatvolt_single' %}selected{% endif %}>Chatvolt API - Prompt Único</option>
+                <option value="gemini_flow" {% if current_agent == 'gemini_flow' %}selected{% endif %}>Gemini API - Fluxo Detalhado (Experimental)</option>
+            </select>
+            <small>A seleção do agente definirá como o conteúdo da petição será gerado.</small>
+        </div>
+        <div class="form-actions" style="margin-top: 10px;">
+            <button type="submit" class="btn btn-generate" style="width: auto;"><i class="fas fa-save"></i> Salvar Preferência</button>
+        </div>
+    </form>
+    <div style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-left: 5px solid var(--primary-color); border-radius: 5px;">
+        <h4 style="color: var(--primary-color); margin-top:0;">Agente Atual Selecionado: <strong style="text-transform: capitalize;">{{ current_agent | replace('_', ' ') }}</strong></h4>
+         <p style="font-size: 0.95em; color: var(--text-color-dark);">
+            {% if current_agent == 'simulated' %}
+                Utiliza um gerador de texto pré-definido para simular a criação da petição.
+            {% elif current_agent == 'groq_general' %}
+                Conecta-se à API da Groq para usar modelos de linguagem amplos.
+            {% elif current_agent == 'chatvolt_single' %}
+                Conecta-se ao seu agente Chatvolt AI, utilizando um prompt único para gerar a petição completa.
+            {% elif current_agent == 'gemini_flow' %}
+                Utiliza a API Gemini (Google) com um fluxo de múltiplas chamadas para construir a petição por partes. Experimental, pode ser mais lento e a qualidade variar por etapa.
+            {% endif %}
+        </p>
+    </div>
+</section>
+{% endblock %}

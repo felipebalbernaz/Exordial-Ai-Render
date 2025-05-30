@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Exordial AI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <header class="app-header">
+        <div class="container header-container">
+            <h1 class="app-logo">
+                <a href="{{ url_for('home') }}">Exordial AI <i class="fas fa-feather-alt"></i></a>
+            </h1>
+
+            {% if session.user_id %}
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{{ url_for('gerar_peticao') }}">Gerador</a></li>
+                    <li><a href="{{ url_for('jurisprudencias') }}">Jurisprudências</a></li>
+                    <li><a href="{{ url_for('selecionar_agentes') }}">Agentes</a></li>
+                    <li class="user-info">
+                        <span>(Tokens: {{ session.user_tokens }})</span>
+                    </li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a></li>
+                </ul>
+            </nav>
+            {% else %}
+            <nav class="auth-nav">
+                <ul>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn btn-primary">Criar Conta</a></li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </header>
+
+    {% block body_content %}
+    <main class="tool-main">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% endblock %}
+
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Exordial AI. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

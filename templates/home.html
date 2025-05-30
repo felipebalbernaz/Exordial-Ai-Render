@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Exordial AI - A Inteligência Artificial a Serviço do Direito{% endblock %}
+
+{% block content %}
+<div class="homepage-container">
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Exordial AI</h1>
+            <p class="hero-subtitle">Transforme horas de trabalho em minutos. Crie petições iniciais robustas e fundamentadas com o poder da inteligência artificial generativa.</p>
+            <div class="hero-cta">
+                <a href="{{ url_for('login') }}" class="btn btn-primary">Acessar Plataforma</a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary">Criar Conta Gratuita</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <h2 class="section-title">Uma Plataforma Completa para o Advogado Moderno</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-robot feature-icon"></i>
+                <h3 class="feature-title">Geração Inteligente</h3>
+                <p class="feature-description">Forneça os fatos do caso e nossa IA elabora um rascunho completo da petição, com endereçamento, qualificação, fatos, direito e pedidos.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-brain feature-icon"></i>
+                <h3 class="feature-title">Múltiplos Agentes de IA</h3>
+                <p class="feature-description">Escolha entre diferentes modelos de IA, como Gemini e Chatvolt, para adaptar a geração de texto ao seu estilo e necessidade.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-balance-scale feature-icon"></i>
+                <h3 class="feature-title">Fundamentação Jurídica</h3>
+                <p class="feature-description">A IA busca e aplica os fundamentos legais e jurisprudenciais pertinentes ao caso, enriquecendo sua argumentação jurídica.</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
