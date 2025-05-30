@@ -348,5 +348,3 @@ def download_docx():
         app.logger.error(f"Erro ao gerar DOCX para download: {e}")
         flash("Erro ao preparar o arquivo DOCX para download.", "danger")
         return redirect(url_for('gerar_peticao'))
-
-if __name__ == '__main__':
